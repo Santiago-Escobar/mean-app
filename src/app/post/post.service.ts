@@ -3,7 +3,7 @@ import { HttpClient } from "@angular/common/http";
 import { Subject } from "rxjs";
 import { map } from "rxjs/operators";
 import { Post } from "./post.model";
-import { Router } from '@angular/router';
+import { Router } from "@angular/router";
 
 @Injectable({ providedIn: "root" })
 export class PostService {
@@ -21,7 +21,8 @@ export class PostService {
             return {
               id: posts._id,
               title: posts.title,
-              content: posts.content
+              content: posts.content,
+              imagePath: posts.imagePath
             };
           });
         })
@@ -37,7 +38,9 @@ export class PostService {
   }
 
   getPost(id: string) {
-    return this.http.get<{_id: string, title: string, content: string}>("http://localhost:3000/api/posts/" + id);
+    return this.http.get<{ _id: string; title: string; content: string, imagePath: string }>(
+      "http://localhost:3000/api/posts/" + id
+    );
   }
 
   addPost(title: string, content: string, image: File) {
@@ -47,12 +50,17 @@ export class PostService {
     postData.append("image", image, title);
     //const post: Post = { id: null, title: title, content: content };
     this.http
-      .post<{ message: string; postId: string }>(
+      .post<{ message: string; post: Post }>(
         "http://localhost:3000/api/posts",
         postData
       )
       .subscribe(responseData => {
-        const post: Post = { id: responseData.postId, title: title, content: content };
+        const post: Post = {
+          id: responseData.post.id,
+          title: title,
+          content: content,
+          imagePath: responseData.post.imagePath
+        };
         //post.id = responseData.postId;
         this.posts.push(post);
         this.postUpdated.next([...this.posts]);
@@ -60,13 +68,34 @@ export class PostService {
       });
   }
 
-  updatePost(id: string, title: string, content: string) {
-    const post: Post = { id: id, title: title, content: content };
+  updatePost(id: string, title: string, content: string, image: File | string) {
+    let postData: Post | FormData;
+    if(typeof(image) === 'object'){
+      postData = new FormData();
+      postData.append("id", id);
+      postData.append("title", title);
+      postData.append("content", content);
+      postData.append("image", image, title);
+    }else{
+      postData = {
+        id: id,
+        title: title,
+        content: content,
+        imagePath: image
+      };
+    }
+
     this.http
-      .put("http://localhost:3000/api/posts/" + id, post)
+      .put("http://localhost:3000/api/posts/" + id, postData)
       .subscribe(response => {
         const updatedPosts = [...this.posts];
-        const oldPostIndex = updatedPosts.findIndex(p => p.id === post.id);
+        const oldPostIndex = updatedPosts.findIndex(p => p.id === id);
+        const post: Post = {
+          id: id,
+          title: title,
+          content: content,
+          imagePath: ""
+        }
         updatedPosts[oldPostIndex] = post;
         this.posts = updatedPosts;
         this.postUpdated.next([...this.posts]);
