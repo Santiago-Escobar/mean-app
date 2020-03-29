@@ -3,9 +3,9 @@ const multer = require("multer");
 const Post = require("../models/post");
 const router = express.Router();
 const MIME_TYPE_MAP = {
-  'image/png': 'png',
-  'image/jpeg': 'jpg',
-  'image/jpg': 'jpg'
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/jpg": "jpg"
 };
 const storageConf = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -19,16 +19,16 @@ const storageConf = multer.diskStorage({
   filename: (req, file, cb) => {
     const name = file.originalname
       .toLowerCase()
-      .split(' ')
-      .join('-');
+      .split(" ")
+      .join("-");
     const ext = MIME_TYPE_MAP[file.mimetype];
-    cb(null, name + '-' + Date.now() + '.' + ext);
+    cb(null, name + "-" + Date.now() + "." + ext);
   }
 });
 //
-var upload = multer({storage: storageConf});
-router.post("", upload.single('image'), function(req, res, next) {
-  const url = req.protocol + '://' + req.get("host");
+var upload = multer({ storage: storageConf });
+router.post("", upload.single("image"), function(req, res, next) {
+  const url = req.protocol + "://" + req.get("host");
   const post = new Post({
     title: req.body.title,
     content: req.body.content,
@@ -39,18 +39,17 @@ router.post("", upload.single('image'), function(req, res, next) {
       message: "post send succesfully!",
       post: {
         ...createdPost,
-        id:  createdPost._id
-
+        id: createdPost._id
       }
     });
   });
 });
 
-router.put("/:id", upload.single('image'), function(req, res, next) {
+router.put("/:id", upload.single("image"), function(req, res, next) {
   let imagePath = req.body.imagePath;
   if (req.file) {
     const url = req.protocol + "://" + req.get("host");
-    imagePath = url + "/images/" + req.file.filename
+    imagePath = url + "/images/" + req.file.filename;
   }
   const post = new Post({
     _id: req.body.id,
@@ -65,12 +64,25 @@ router.put("/:id", upload.single('image'), function(req, res, next) {
 });
 // rwdavid // ycf9jAk57srl6cm0
 router.get("", function(req, res, next) {
-  Post.find().then(posts => {
-    res.status(200).json({
-      message: "Post fetched succesfully",
-      posts: posts
+  const pageSize = +req.query.pageSize;
+  const currentPage = +req.query.page;
+  const postQuery = Post.find();
+  let fetchedPosts;
+  if (pageSize && currentPage) {
+    postQuery.skip(pageSize * (currentPage - 1)).limit(pageSize);
+  }
+  postQuery
+    .then(documents => {
+      fetchedPosts = documents;
+      return Post.countDocuments();
+    })
+    .then(count => {
+      res.status(200).json({
+        message: "Post fetched succesfully",
+        posts: fetchedPosts,
+        maxPosts: count
+      });
     });
-  });
 });
 
 router.get("/:id", function(req, res, next) {
