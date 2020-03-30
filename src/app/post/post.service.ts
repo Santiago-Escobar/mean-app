@@ -26,7 +26,8 @@ export class PostService {
                 id: posts._id,
                 title: posts.title,
                 content: posts.content,
-                imagePath: posts.imagePath
+                imagePath: posts.imagePath,
+                author: posts.author
               };
             }),
             maxPosts: postData.maxPosts
@@ -52,6 +53,7 @@ export class PostService {
       title: string;
       content: string;
       imagePath: string;
+      author: string;
     }>("http://localhost:3000/api/posts/" + id);
   }
 
@@ -84,7 +86,8 @@ export class PostService {
         id: id,
         title: title,
         content: content,
-        imagePath: image
+        imagePath: image,
+        author: null
       };
     }
 
