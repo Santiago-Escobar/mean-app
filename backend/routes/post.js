@@ -44,6 +44,11 @@ router.post("", checkAuth, upload.single("image"), function(req, res, next) {
         id: createdPost._id
       }
     });
+  })
+  .catch( err => {
+    res.status(500).json({
+      message: "Creating a post failed!"
+    })
   });
 });
 
@@ -62,13 +67,16 @@ router.put("/:id", checkAuth, upload.single("image"), function(req, res, next) {
   });
   Post.updateOne({ _id: req.params.id, author: req.userData.userId }, post).then(result => {
     if(result.nModified > 0){
-      res.status(200).json({ message: "updated" });
+      res.status(200).json({ message: "Updated Successfull" });
     }
     else{
       res.status(401).json({ message: "Not Authorized" });
     }
-    //console.log(result);
-
+  })
+  .catch( err => {
+    res.status(500).json({
+      message: "Couldn't update post!"
+    })
   });
 });
 // rwdavid // ycf9jAk57srl6cm0
@@ -91,6 +99,11 @@ router.get("", function(req, res, next) {
         posts: fetchedPosts,
         maxPosts: count
       });
+    })
+    .catch( err => {
+      res.status(500).json({
+        message: "Fetching posts failed"
+      })
     });
 });
 
@@ -102,6 +115,11 @@ router.get("/:id", function(req, res, next) {
     } else {
       res.status(404).json({ message: "post not found" });
     }
+  })
+  .catch( err => {
+    res.status(500).json({
+      message: "Fetching post failed"
+    })
   });
 });
 
@@ -114,6 +132,11 @@ router.delete("/:id", checkAuth, function(req, res, next) {
     else{
       res.status(401).json({ message: "Not Authorized" });
     }
+  })
+  .catch( err => {
+    res.status(500).json({
+      message: "Couldn't delete post"
+    })
   });
 });
 
